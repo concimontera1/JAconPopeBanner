@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JobAround - Research Dashboard</title>
+  <style>
+    /* ==========================================================================
+       1. VARIABLES & RESET
+       ========================================================================== */
+    :root {
+      --primary: #0056b3;
+      --primary-hover: #004085;
+      --dark: #0f172a;
+      --light-gray: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-muted: #64748b;
+      --danger: #dc3545;
+      --success: #16a34a;
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: #f1f5f9;
+      color: var(--dark);
+      line-height: 1.5;
+      padding: 30px 20px;
+    }
+
+    /* ==========================================================================
+       2. DASHBOARD LAYOUT
+       ========================================================================== */
+    .dashboard-container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .dashboard-header {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .dashboard-title h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--dark);
+    }
+
+    .dashboard-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-export {
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-export:hover { background: var(--primary-hover); }
+
+    /* ==========================================================================
+       3. STATS CARDS
+       ========================================================================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .stat-card .val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-top: 4px;
+    }
+
+    .stat-card .lbl {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==========================================================================
+       4. DATA TABLE
+       ========================================================================== */
+    .table-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .data-table-wrapper {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    .data-table th, .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table th {
+      background: var(--light-gray);
+      font-weight: 700;
+      color: var(--dark);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover { background: #f8fafc; }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      background: var(--light-gray);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-success { color: var(--success); }
+    .badge-danger { color: var(--danger); }
+
+    /* ==========================================================================
+       5. RESPONSIVE DESIGN
+       ========================================================================== */
+    @media (max-width: 768px) {
+      .dashboard-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+      .action-buttons { width: 100%; }
+      .btn-export { flex: 1; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard-container">
+    
+    <!-- Dashboard Header -->
+    <header class="dashboard-header">
+      <div class="dashboard-title">
+        <h1>📊 JobAround - Research Dashboard</h1>
+        <p>Pannello di Analisi Dati Sperimentali | Tesi di Laurea su Nudge e Comportamento Utente</p>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-export" id="btn-export-csv">Esporta CSV</button>
+        <button class="btn-export" id="btn-export-json">Esporta JSON</button>
+      </div>
+    </header>
+
+    <!-- Statistiche Calcolate sui Dati Reali -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="lbl">Partecipanti Totali</div>
+        <div class="val" id="stat-total-sessions">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Tempo Medio a Click</div>
+        <div class="val" id="stat-avg-time">0s</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Tempo Mediano</div>
+        <div class="val" id="stat-median-time">0s</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Min / Max Click</div>
+        <div class="val" id="stat-min-max">0s / 0s</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Click Sidebar / Bottom</div>
+        <div class="val" id="stat-buttons">0 / 0</div>
+      </div>
+      <div class="stat-card">
+        <div class="lbl">Esposti a Entrambi Popup</div>
+        <div class="val" id="stat-both-nudges">0</div>
+      </div>
+    </section>
+
+    <!-- Tabella Dati Ordinati Cronologicamente -->
+    <main class="table-card">
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Session ID</th>
+              <th>Entrata</th>
+              <th>Click</th>
+              <th>Tempo prima del click (s)</th>
+              <th>Pulsante</th>
+              <th>Social Proof</th>
+              <th>Scarsità</th>
+            </tr>
+          </thead>
+          <tbody id="dashboard-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted);">
+                Connessione a Firestore in corso...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- FIREBASE SDK & DASHBOARD ENGINE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      query, 
+      orderBy 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    /* ==========================================================================
+       FIREBASE CONFIGURATION
+       Inserisci qui le stesse credenziali usate in index.html
+       ========================================================================== */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBmB8DpetU73eUhcQIfwStWxSehlOA8h3I",
+    authDomain: "sitopopebanner.firebaseapp.com",
+    projectId: "sitopopebanner",
+    storageBucket: "sitopopebanner.firebasestorage.app",
+    messagingSenderId: "868881604593",
+    appId: "1:868881604593:web:b1860ed7b8e19a5253ee50"
+    };
+
+    // Inizializzazione Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Collezione isolata della versione finale
+    const EXPERIMENT_COLLECTION_PATH = "experiments/jobaround_final/sessions";
+
+    let datasetCache = [];
+
+    // Caricamento Dati da Firestore
+    async function loadResearchDashboard() {
+      const tbody = document.getElementById("dashboard-tbody");
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Caricamento sessioni in corso...</td></tr>`;
+
+      try {
+        // Query che ordina dal partecipante più vecchio al più recente (entryTime ASC)
+        const sessionsRef = collection(db, EXPERIMENT_COLLECTION_PATH);
+        const q = query(sessionsRef, orderBy("entryTime", "asc"));
+        const querySnapshot = await getDocs(q);
+
+        datasetCache = [];
+        querySnapshot.forEach((doc) => {
+          datasetCache.push(doc.data());
+        });
+
+        renderDashboardTable(datasetCache);
+        calculateAndRenderStats(datasetCache);
+
+      } catch (error) {
+        console.error("[Dashboard Error]", error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--danger);">
+          Impossibile connettersi a Firestore. Verificare le credenziali Firebase in research.html o le Regole di Sicurezza.<br>
+          Dettaglio errore: ${error.message}
+        </td></tr>`;
+      }
+    }
+
+    // Rendering Tabella
+    function renderDashboardTable(data) {
+      const tbody = document.getElementById("dashboard-tbody");
+      tbody.innerHTML = "";
+
+      if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nessuna sessione registrata nella collezione finale.</td></tr>`;
+        return;
+      }
+
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+
+        // Formattazione data e ora locale dai timestamp reali
+        const formatTime = (isoString) => {
+          if (!isoString) return "N/D";
+          const d = new Date(isoString);
+          return isNaN(d.getTime()) ? "Timestamp non valido" : d.toLocaleString("it-IT");
+        };
+
+        tr.innerHTML = `
+          <td><strong>${item.sessionId || 'N/D'}</strong></td>
+          <td>${formatTime(item.entryTime)}</td>
+          <td>${formatTime(item.clickTime)}</td>
+          <td><strong>${item.timeToApply !== undefined ? item.timeToApply + ' s' : 'N/D'}</strong></td>
+          <td><span class="tag">${item.button || 'N/D'}</span></td>
+          <td class="${item.socialProofShownAt ? 'badge-success' : 'badge-danger'}">
+            ${item.socialProofShownAt ? '✅ Mostrato' : '❌ No'}
+          </td>
+          <td class="${item.scarcityShownAt ? 'badge-success' : 'badge-danger'}">
+            ${item.scarcityShownAt ? '✅ Mostrato' : '❌ No'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Calcolo Statistiche
+    function calculateAndRenderStats(data) {
+      const total = data.length;
+      document.getElementById("stat-total-sessions").textContent = total;
+
+      if (total === 0) return;
+
+      const times = data.map(d => Number(d.timeToApply)).filter(t => !isNaN(t)).sort((a, b) => a - b);
+      
+      // Media
+      const sum = times.reduce((acc, curr) => acc + curr, 0);
+      const avg = (sum / times.length).toFixed(2);
+      document.getElementById("stat-avg-time").textContent = `${avg}s`;
+
+      // Mediana
+      let median = 0;
+      const mid = Math.floor(times.length / 2);
+      if (times.length % 2 !== 0) {
+        median = times[mid];
+      } else {
+        median = ((times[mid - 1] + times[mid]) / 2);
+      }
+      document.getElementById("stat-median-time").textContent = `${median.toFixed(2)}s`;
+
+      // Min/Max
+      const min = times[0].toFixed(2);
+      const max = times[times.length - 1].toFixed(2);
+      document.getElementById("stat-min-max").textContent = `${min}s / ${max}s`;
+
+      // Pulsanti
+      const sidebarClicks = data.filter(d => d.button === "sidebar_apply").length;
+      const bottomClicks = data.filter(d => d.button === "bottom_apply").length;
+      document.getElementById("stat-buttons").textContent = `${sidebarClicks} / ${bottomClicks}`;
+
+      // Entrambi Nudge esposti
+      const bothExposed = data.filter(d => d.socialProofShownAt && d.scarcityShownAt).length;
+      document.getElementById("stat-both-nudges").textContent = bothExposed;
+    }
+
+    // Esportazione CSV
+    function exportCSV() {
+      if (!datasetCache.length) return alert("Nessun dato da esportare.");
+
+      const headers = ["sessionId", "entryTime", "clickTime", "timeToApply", "timeOnPage", "button", "socialProofShownAt", "scarcityShownAt"];
+      let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+
+      datasetCache.forEach(row => {
+        const values = headers.map(header => {
+          const val = row[header] !== undefined && row[header] !== null ? row[header] : "";
+          return `"${String(val).replace(/"/g, '""')}"`;
+        });
+        csvContent += values.join(",") + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `jobaround_research_data_${Date.now()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Esportazione JSON
+    function exportJSON() {
+      if (!datasetCache.length) return alert("Nessun dato da esportare.");
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(datasetCache, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `jobaround_research_data_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // Inizializzazione all'apertura della pagina
+    window.addEventListener("DOMContentLoaded", () => {
+      loadResearchDashboard();
+      document.getElementById("btn-export-csv").addEventListener("click", exportCSV);
+      document.getElementById("btn-export-json").addEventListener("click", exportJSON);
+    });
+  </script>
+</body>
+</html>
